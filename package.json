@@ -1,0 +1,15 @@
+{
+  "name":"sukima-insight",
+  "version":"0.1.0",
+  "private":true,
+  "type":"module",
+  "workspaces":["apps/*","services/*","packages/*"],
+  "scripts":{
+    "dev":"npm --workspace @sukima-insight/dashboard run dev",
+    "build":"npm --workspace @sukima-insight/dashboard run build",
+    "api":"npm --workspace @sukima-insight/collector start",
+    "test":"npm --workspace @sukima-insight/collector test",
+    "sync:github":"npm --workspace @sukima-insight/collector run sync:github"
+  },
+  "engines":{"node":">=24"}
+}

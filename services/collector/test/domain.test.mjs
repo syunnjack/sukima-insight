@@ -1,0 +1,8 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { openDatabase } from '../db.mjs'
+import { authenticateWorkspace,recordEvent,registerProject,seedDevelopment,summary } from '../domain.mjs'
+const setup=()=>{const db=openDatabase(':memory:');seedDevelopment(db);return db}
+test('workspace authentication and project isolation',()=>{const db=setup();assert.ok(authenticateWorkspace(db,'ws-demo','dev-change-me'));assert.equal(authenticateWorkspace(db,'ws-demo','wrong'),null);assert.throws(()=>recordEvent(db,{projectId:'project-task-dashboard',writeKey:'wrong',eventName:'page_view'}),/invalid_project_key/)})
+test('analytics computes access, CTR, CVR and revenue',()=>{const db=setup();for(const eventName of ['session_started','page_view','offer_impression','affiliate_click'])recordEvent(db,{projectId:'project-task-dashboard',writeKey:'project-dev-key',sessionId:'device',eventName});recordEvent(db,{projectId:'project-task-dashboard',writeKey:'project-dev-key',sessionId:'device',eventName:'conversion',revenue:3200,properties:{placement:'hero',secret:'discard'}});const result=summary(db,'ws-demo');assert.equal(result.sessions,1);assert.equal(result.ctr,100);assert.equal(result.cvr,100);assert.equal(result.revenue,3200);assert.equal(result.projects[0].status,'計測中')})
+test('any repository can be registered without a fixed project limit in schema',()=>{const db=setup();const project=registerProject(db,{workspaceId:'ws-demo',repoFullName:'syunnjack/sukima-insight',visibility:'private'});assert.equal(project.repo_full_name,'syunnjack/sukima-insight');assert.ok(project.writeKey)})

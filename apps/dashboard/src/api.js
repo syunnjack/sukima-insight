@@ -1,0 +1,6 @@
+const API=(import.meta.env.VITE_INSIGHT_API_URL||'').replace(/\/$/,'')
+export async function getSummary(workspaceId,adminKey,days){
+  const response=await fetch(`${API}/v1/summary?workspaceId=${encodeURIComponent(workspaceId)}&days=${days}`,{headers:{authorization:`Bearer ${adminKey}`}})
+  const data=await response.json();if(!response.ok)throw new Error(data.error||'request_failed');return data
+}
+export const apiConfigured=Boolean(API)
