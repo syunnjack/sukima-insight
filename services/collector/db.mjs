@@ -10,6 +10,11 @@ export function openDatabase(path=process.env.INSIGHT_DB_PATH||'./data/insight.d
     `CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id),project_id TEXT NOT NULL REFERENCES projects(id),session_hash TEXT NOT NULL,event_name TEXT NOT NULL,app TEXT NOT NULL,page TEXT,properties_json TEXT NOT NULL DEFAULT '{}',revenue REAL NOT NULL DEFAULT 0,currency TEXT NOT NULL DEFAULT 'JPY',occurred_at TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS events_workspace_time_idx ON events(workspace_id,occurred_at)`,
     `CREATE INDEX IF NOT EXISTS events_project_time_idx ON events(project_id,occurred_at)`
+    ,`CREATE TABLE IF NOT EXISTS github_installations(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id),installation_id INTEGER NOT NULL UNIQUE,account_login TEXT NOT NULL,account_type TEXT NOT NULL DEFAULT 'User',repository_selection TEXT NOT NULL DEFAULT 'selected',status TEXT NOT NULL DEFAULT 'active',last_synced_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)`
+    ,`CREATE TABLE IF NOT EXISTS webhook_deliveries(delivery_id TEXT PRIMARY KEY,event_name TEXT NOT NULL,status TEXT NOT NULL,received_at TEXT NOT NULL)`
+    ,`CREATE TABLE IF NOT EXISTS audit_logs(id TEXT PRIMARY KEY,workspace_id TEXT,action TEXT NOT NULL,actor TEXT NOT NULL,metadata_json TEXT NOT NULL DEFAULT '{}',created_at TEXT NOT NULL)`
   ])db.prepare(sql).run()
+  const columns=new Set(db.prepare('PRAGMA table_info(projects)').all().map((row)=>row.name))
+  for(const [name,type] of [['github_repository_id','INTEGER'],['default_branch','TEXT'],['archived','INTEGER NOT NULL DEFAULT 0'],['last_synced_at','TEXT']])if(!columns.has(name))db.exec(`ALTER TABLE projects ADD COLUMN ${name} ${type}`)
   return db
 }
